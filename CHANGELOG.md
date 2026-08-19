@@ -1,9 +1,15 @@
 # Changelog
 
+## 0.1.9 — 2026-08-19
+
+- Parse Antigravity `toolCall.args` / `toolCall.arguments` and `workspacePaths` in the Agy hook.
+- Remove the unsupported Codex CLI `--ask-for-approval` flag.
+- Register only Antigravity's actual `view_file` hook matcher; Claude/Cursor `Read` hooks remain unchanged.
+
 ## 0.1.8 — 2026-08-19
 
 - Fixed Agy plugin registration by updating `import_manifest.json`.
-- Match the current Agy `ViewFile` tool name (shown as `Read` in the UI) and retain legacy matcher spellings.
+- Register the Agy plugin hooks and preserve unrelated imports.
 - Use absolute Node paths for the Agy hook and MCP commands so GUI-launched Agy sessions can find them.
 
 ## 0.1.7 — 2026-08-19

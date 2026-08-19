@@ -19,7 +19,15 @@ export async function readHookInput(): Promise<HookInput | null> {
 }
 
 function nestedToolInput(input: HookInput): Record<string, unknown> {
-  return record(input.tool_input ?? input.toolInput ?? input.arguments ?? input);
+  const toolCall = record(input.toolCall);
+  return record(
+    toolCall.args
+      ?? toolCall.arguments
+      ?? input.tool_input
+      ?? input.toolInput
+      ?? input.arguments
+      ?? input,
+  );
 }
 
 function pathValue(value: unknown): string | undefined {
@@ -27,7 +35,11 @@ function pathValue(value: unknown): string | undefined {
 }
 
 function cwdOf(input: HookInput): string | undefined {
-  return pathValue(input.cwd) ?? pathValue(input.working_directory) ?? pathValue(input.workspace);
+  const workspacePaths = Array.isArray(input.workspacePaths) ? input.workspacePaths : [];
+  return workspacePaths.map(pathValue).find((value): value is string => Boolean(value))
+    ?? pathValue(input.cwd)
+    ?? pathValue(input.working_directory)
+    ?? pathValue(input.workspace);
 }
 
 function hostPath(input: HookInput, host: HostId): { toolInput: Record<string, unknown>; path?: string; key?: string } {

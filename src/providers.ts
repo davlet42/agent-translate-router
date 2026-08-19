@@ -78,7 +78,7 @@ export async function runProvider(provider: ProviderId, config: ProviderConfig, 
     if (provider === "codex") {
       temp = await mkdtemp(join(tmpdir(), "agent-translate-router-"));
       outputFile = join(temp, "last-message.txt");
-      result = await runProcess(config.command, ["exec", "--model", config.model, "-c", `model_reasoning_effort=\"${config.effort ?? "low"}\"`, "--skip-git-repo-check", "--ignore-user-config", "--ephemeral", "--sandbox", "read-only", "--ask-for-approval", "never", "--json", "--output-last-message", outputFile, "-"], full, timeoutMs, env);
+      result = await runProcess(config.command, ["exec", "--model", config.model, "-c", `model_reasoning_effort=\"${config.effort ?? "low"}\"`, "--skip-git-repo-check", "--ignore-user-config", "--ephemeral", "--sandbox", "read-only", "--json", "--output-last-message", outputFile, "-"], full, timeoutMs, env);
       if (result.code === 0 && !result.timedOut) {
         const output = (await readFile(outputFile, "utf8").catch(() => "")).trim();
         if (output) return output;

@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { adaptClaudePretool, adaptCursorPretool } from "../dist/hook-adapters.js";
+import { adaptAgyPretool, adaptClaudePretool, adaptCursorPretool } from "../dist/hook-adapters.js";
 import { mergeAgyConfig, mergeAgyImportManifest, mergeClaudeSettings, mergeCursorHooks } from "../dist/install-hooks.js";
 import { mergeCodexMcp, mergeCursorMcp } from "../dist/install-mcp.js";
 import { sha256 } from "../dist/segments.js";
@@ -25,14 +25,14 @@ test("Claude and Cursor hook installers preserve unrelated hooks and replace rou
   assert.match(cursor.hooks.preToolUse[1].command, /agent-translate-router hook cursor-pretool/);
 });
 
-test("Agy installer supports current Read and legacy view_file tool names", async () => {
+test("Agy installer registers only the current view_file tool name", async () => {
   const home = await mkdtemp(join(tmpdir(), "agent-router-agy-hooks-"));
   const { installAgyPlugin } = await import("../dist/install-hooks.js");
   await installAgyPlugin({ home });
   const hooks = JSON.parse(await (await import("node:fs/promises")).readFile(join(home, ".gemini", "config", "plugins", "agent-translate-router", "hooks.json"), "utf8"));
   assert.deepEqual(
     hooks["agent-translate-router-read"].PreToolUse.map((entry) => entry.matcher),
-    ["ViewFile", "Read", "view_file"],
+    ["view_file"],
   );
   const manifest = JSON.parse(await (await import("node:fs/promises")).readFile(join(home, ".gemini", "config", "import_manifest.json"), "utf8"));
   assert.deepEqual(manifest.imports[0].components, ["mcpServers", "hooks"]);
@@ -67,6 +67,8 @@ test("host adapters rewrite only to a complete shared-cache document", async () 
   assert.equal(claude.hookSpecificOutput.updatedInput.file_path, cached);
   const cursor = await adaptCursorPretool({ tool_input: { path: source }, cwd: root }, config);
   assert.equal(cursor.updated_input.path, cached);
+  const agy = await adaptAgyPretool({ toolCall: { name: "view_file", args: { AbsolutePath: source } }, workspacePaths: [root] }, config);
+  assert.equal(agy.overwrite.AbsolutePath, cached);
 });
 
 test("MCP installation disables only the old translation servers", () => {

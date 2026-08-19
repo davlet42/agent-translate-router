@@ -140,9 +140,7 @@ export async function installAgyPlugin(options: InstallHooksOptions = {}): Promi
     [join(pluginDir, "plugin.json"), { name: "agent-translate-router", version }],
     [join(pluginDir, "hooks.json"), {
       "agent-translate-router-read": {
-        // Current Antigravity uses ViewFile internally (shown as Read in the UI).
-        // Keep the other spellings for older CLI/plugin contracts.
-        PreToolUse: [agyReadHook(command, "ViewFile"), agyReadHook(command, "Read"), agyReadHook(command, "view_file")],
+        PreToolUse: [agyReadHook(command, "view_file")],
       },
     }],
     [join(pluginDir, "mcp_config.json"), { mcpServers: { "agent-translate-router": { command: process.execPath, args: [mcpPath] } } }],
@@ -165,7 +163,7 @@ export async function installAgyPlugin(options: InstallHooksOptions = {}): Promi
   await saveJson(configPath, mergeAgyConfig(config, options.disableOld !== false), dryRun);
   return [
     `Agy: ${dryRun ? "would install" : "installed"} ${pluginDir}`,
-    "Agy: registered plugin and PreToolUse ViewFile/Read/view_file hooks",
+    "Agy: registered plugin and PreToolUse view_file hook",
     "Agy: the old agy-translate plugin is disabled but its package and cache are preserved",
     ...backups,
   ];

@@ -12,7 +12,7 @@ agent-translate-router providers
 
 Provider CLI authentication remains the responsibility of the provider. Discovery uses version/help and non-generating auth status commands where available. It never spends quota just to inspect the machine.
 
-To connect the native `Read` hooks:
+To connect the native read hooks:
 
 ```bash
 agent-translate-router install-hooks --dry-run all
@@ -21,7 +21,7 @@ agent-translate-router install-mcp --dry-run all
 agent-translate-router install-mcp all
 ```
 
-Claude receives `agent-translate-router hook claude-pretool`, Cursor receives `agent-translate-router hook cursor-pretool`, and Agy receives `agent-translate-router hook agy-pretool` through a registered local plugin. The Agy plugin registers `ViewFile` (shown as `Read` in the UI) plus legacy spellings and updates `import_manifest.json`; existing configuration is backed up before writing. Codex has no generic pre-tool hook, so its integration is MCP-based.
+Claude receives `agent-translate-router hook claude-pretool`, Cursor receives `agent-translate-router hook cursor-pretool`, and Agy receives `agent-translate-router hook agy-pretool` through a registered local plugin. The Agy plugin registers only the `view_file` matcher and updates `import_manifest.json`; existing configuration is backed up before writing. Codex has no generic pre-tool hook, so its integration is MCP-based.
 
 `install-mcp all` registers `agent-translate-router-mcp` with Codex, Cursor, Claude, and Agy. It disables only `codex-translate`, `cursor-translate`, `claude-translate`, and `agy-translate` MCP/plugin integrations; Figma, Atlassian, Playwright, Pencil, and other unrelated servers are preserved.
 
