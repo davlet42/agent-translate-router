@@ -3,4 +3,6 @@ export { translateText, translateDocument } from "./router.js";
 export { discoverProvider, runProvider, ProviderError } from "./providers.js";
 export { findCache, writeCache, cachePath, projectRoot, projectSlug } from "./cache.js";
 export { sha256, splitText } from "./segments.js";
+export { adaptAgyPretool, adaptClaudePretool, adaptCursorPretool, runHostHook } from "./hook-adapters.js";
+export { installHooks, mergeClaudeSettings, mergeCursorHooks } from "./install-hooks.js";
 export type * from "./types.js";

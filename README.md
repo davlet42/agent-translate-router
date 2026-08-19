@@ -28,7 +28,11 @@ OpenAI's official model guidance describes GPT-5.6 Luna as optimized for cost-se
 ```bash
 npm install -g agent-translate-router
 agent-translate-router init
+agent-translate-router install-hooks --dry-run all
+agent-translate-router install-hooks all
 ```
+
+The installer backs up existing configuration before changing it. It connects the `Read` adapter for Claude and Cursor, disables the old Claude translation plugin entry, and removes only old translation hook entries from Cursor. It does not delete old packages or caches. Agy and Codex are reported without modifying guessed configuration paths.
 
 Use a project checkout during development:
 
@@ -116,7 +120,11 @@ agent-translate-router policy explain --host claude
 agent-translate-router policy validate
 agent-translate-router translate "Русский prompt" --host claude --json
 agent-translate-router doc README.md --json
+agent-translate-router hook claude-pretool < hook.json
+agent-translate-router hook cursor-pretool < hook.json
+agent-translate-router hook agy-pretool < hook.json
 agent-translate-router hook-resolve < hook.json
+agent-translate-router install-hooks [all|claude|cursor|agy|codex] [--dry-run] [--no-disable]
 agent-translate-router cache-stats
 ```
 
@@ -134,7 +142,7 @@ agent-translate-router cache-stats
 {"host":"claude","tool_input":{"file_path":"/project/README.md"}}
 ```
 
-It returns `decision: allow`, translated content/read path, provider/model metadata, and `failOpen`. Provider-specific hook adapters can map this neutral result to Claude, Codex, Agy, or Cursor hook contracts.
+It returns `decision: allow`, translated content/read path, provider/model metadata, and `failOpen`. The native adapters rewrite only a successful Markdown read to the shared English cache path. Missing CLIs, quota errors, timeouts, invalid output, and incomplete documents remain fail-open: the host reads the original file.
 
 ## Cache compatibility
 
