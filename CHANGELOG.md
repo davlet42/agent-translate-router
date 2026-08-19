@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5 — 2026-08-19
+
+- Fixed installed Agy plugin and MCP server metadata to derive their version from the package instead of a stale hardcoded value.
+
 ## 0.1.4 — 2026-08-19
 
 - Added `report [--days N] [--json]` with cross-provider token savings and ROI aggregation.

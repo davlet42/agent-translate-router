@@ -66,6 +66,13 @@ async function backup(path: string, dryRun: boolean): Promise<string | undefined
   return target;
 }
 
+async function packageVersion(): Promise<string> {
+  try {
+    const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8")) as { version?: string };
+    return packageJson.version ?? "unknown";
+  } catch { return "unknown"; }
+}
+
 export function mergeAgyConfig(input: JsonObject, disableOld = true): JsonObject {
   const result = { ...input };
   const plugins = { ...object(result.plugins) };
@@ -100,8 +107,9 @@ export async function installAgyPlugin(options: InstallHooksOptions = {}): Promi
   const pluginDir = join(home, ".gemini", "config", "plugins", "agent-translate-router");
   const configPath = join(home, ".gemini", "config", "config.json");
   const dryRun = options.dryRun === true;
+  const version = await packageVersion();
   const files: Array<[string, JsonObject]> = [
-    [join(pluginDir, "plugin.json"), { name: "agent-translate-router", version: "0.1.3" }],
+    [join(pluginDir, "plugin.json"), { name: "agent-translate-router", version }],
     [join(pluginDir, "hooks.json"), { "agent-translate-router-read": { PreToolUse: [{ matcher: "view_file", hooks: [{ type: "command", command: "agent-translate-router hook agy-pretool", timeout: 12 }] }] } }],
     [join(pluginDir, "mcp_config.json"), { mcpServers: { "agent-translate-router": { command: "agent-translate-router-mcp", args: [] } } }],
   ];

@@ -6,7 +6,14 @@ import { loadConfig } from "./config.js";
 import { translateDocument, translateText } from "./router.js";
 import type { HostId, TranslationDirection } from "./types.js";
 
-const VERSION = "0.1.3";
+let versionPromise: Promise<string> | undefined;
+
+async function packageVersion(): Promise<string> {
+  versionPromise ??= readFile(new URL("../package.json", import.meta.url), "utf8")
+    .then((raw) => (JSON.parse(raw) as { version?: string }).version ?? "unknown")
+    .catch(() => "unknown");
+  return versionPromise;
+}
 
 const TOOLS = [
   {
@@ -44,9 +51,10 @@ function textResult(value: unknown): { content: [{ type: "text"; text: string }]
 
 export async function handleMcpRequest(request: Record<string, unknown>, config?: Awaited<ReturnType<typeof loadConfig>>): Promise<Record<string, unknown> | null> {
   const activeConfig = config ?? await loadConfig();
+  const version = await packageVersion();
   const id = request.id;
   if (request.method === "initialize") {
-    return { jsonrpc: "2.0", id, result: { protocolVersion: "2024-11-05", serverInfo: { name: "agent-translate-router", version: VERSION }, capabilities: { tools: {} } } };
+    return { jsonrpc: "2.0", id, result: { protocolVersion: "2024-11-05", serverInfo: { name: "agent-translate-router", version }, capabilities: { tools: {} } } };
   }
   if (request.method === "notifications/initialized" || request.method === "notifications/cancelled") return null;
   if (request.method === "tools/list") return { jsonrpc: "2.0", id, result: { tools: TOOLS } };
