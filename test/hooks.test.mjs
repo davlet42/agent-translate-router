@@ -25,6 +25,17 @@ test("Claude and Cursor hook installers preserve unrelated hooks and replace rou
   assert.match(cursor.hooks.preToolUse[1].command, /agent-translate-router hook cursor-pretool/);
 });
 
+test("Agy installer supports current Read and legacy view_file tool names", async () => {
+  const home = await mkdtemp(join(tmpdir(), "agent-router-agy-hooks-"));
+  const { installAgyPlugin } = await import("../dist/install-hooks.js");
+  await installAgyPlugin({ home });
+  const hooks = JSON.parse(await (await import("node:fs/promises")).readFile(join(home, ".gemini", "config", "plugins", "agent-translate-router", "hooks.json"), "utf8"));
+  assert.deepEqual(
+    hooks["agent-translate-router-read"].PreToolUse.map((entry) => entry.matcher),
+    ["Read", "view_file"],
+  );
+});
+
 test("host adapters rewrite only to a complete shared-cache document", async () => {
   const root = await mkdtemp(join(tmpdir(), "agent-router-hooks-"));
   const source = join(root, "README.md");

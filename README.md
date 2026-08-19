@@ -35,7 +35,7 @@ agent-translate-router install-mcp all
 agent-translate-router report --days 7
 ```
 
-The installers back up existing configuration before changing it. `install-hooks` connects the `Read` adapter for Claude, Cursor, and the installed Agy plugin. `install-mcp` registers one cross-provider server and disables only the old translation MCP integrations; unrelated MCP servers and old packages/caches remain untouched.
+The installers back up existing configuration before changing it. `install-hooks` connects the `Read` adapter for Claude and Cursor, and registers both current Agy `Read` and legacy `view_file` matchers. `install-mcp` registers one cross-provider server and disables only the old translation MCP integrations; unrelated MCP servers and old packages/caches remain untouched.
 
 Use a project checkout during development:
 

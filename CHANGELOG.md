@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.7 — 2026-08-19
+
+- Fixed Agy lazy-read integration for current Agy sessions, which emit the `Read` tool name instead of `view_file`.
+- Kept the legacy `view_file` matcher for compatibility with older Agy installations.
+
 ## 0.1.6 — 2026-08-19
 
 - Fixed legacy `.gemini/translate-proxy` metrics to be reported under the `agy` provider name.
