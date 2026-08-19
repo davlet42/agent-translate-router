@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.8 — 2026-08-19
+
+- Fixed Agy plugin registration by updating `import_manifest.json`.
+- Match the current Agy `ViewFile` tool name (shown as `Read` in the UI) and retain legacy matcher spellings.
+- Use absolute Node paths for the Agy hook and MCP commands so GUI-launched Agy sessions can find them.
+
 ## 0.1.7 — 2026-08-19
 
 - Fixed Agy lazy-read integration for current Agy sessions, which emit the `Read` tool name instead of `view_file`.

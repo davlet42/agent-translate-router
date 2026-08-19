@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { adaptClaudePretool, adaptCursorPretool } from "../dist/hook-adapters.js";
-import { mergeAgyConfig, mergeClaudeSettings, mergeCursorHooks } from "../dist/install-hooks.js";
+import { mergeAgyConfig, mergeAgyImportManifest, mergeClaudeSettings, mergeCursorHooks } from "../dist/install-hooks.js";
 import { mergeCodexMcp, mergeCursorMcp } from "../dist/install-mcp.js";
 import { sha256 } from "../dist/segments.js";
 
@@ -32,8 +32,17 @@ test("Agy installer supports current Read and legacy view_file tool names", asyn
   const hooks = JSON.parse(await (await import("node:fs/promises")).readFile(join(home, ".gemini", "config", "plugins", "agent-translate-router", "hooks.json"), "utf8"));
   assert.deepEqual(
     hooks["agent-translate-router-read"].PreToolUse.map((entry) => entry.matcher),
-    ["Read", "view_file"],
+    ["ViewFile", "Read", "view_file"],
   );
+  const manifest = JSON.parse(await (await import("node:fs/promises")).readFile(join(home, ".gemini", "config", "import_manifest.json"), "utf8"));
+  assert.deepEqual(manifest.imports[0].components, ["mcpServers", "hooks"]);
+  assert.equal(manifest.imports[0].source, "antigravity");
+});
+
+test("Agy import manifest preserves unrelated plugins", () => {
+  const manifest = mergeAgyImportManifest({ imports: [{ name: "Figma", source: "gemini-cli", components: ["mcpServers"] }] }, "agent-translate-router", ["mcpServers", "hooks"]);
+  assert.equal(manifest.imports.length, 2);
+  assert.equal(manifest.imports[0].name, "Figma");
 });
 
 test("host adapters rewrite only to a complete shared-cache document", async () => {

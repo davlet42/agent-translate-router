@@ -1,6 +1,6 @@
 {
   "name": "agent-translate-router",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Standalone cross-provider translation router for AI-agent hooks with ordered fallbacks and shared caches",
   "license": "MIT",
   "type": "module",
