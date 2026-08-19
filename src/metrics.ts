@@ -5,6 +5,7 @@ import type { ProviderId, RouterConfig } from "./types.js";
 export interface MetricEntry {
   ts: string;
   source: string;
+  host?: string;
   provider?: string;
   model?: string;
   direction?: string;
@@ -41,13 +42,14 @@ export interface RouterReport {
   breakEvenReads: number | null;
   bySource: Record<string, ReportBucket>;
   byProvider: Record<string, ReportBucket>;
+  byHost: Record<string, ReportBucket>;
 }
 
 export function estimateTokens(text: string, language: "ru" | "en"): number {
   return Math.ceil(text.length / (language === "ru" ? 3 : 4));
 }
 
-export function metricForTranslation(options: { source: string; translated: string; provider?: string; model?: string; projectSlug?: string; sourcePath?: string; direction?: string; }): MetricEntry {
+export function metricForTranslation(options: { source: string; translated: string; host?: string; provider?: string; model?: string; projectSlug?: string; sourcePath?: string; direction?: string; }): MetricEntry {
   const sourceLanguage = options.direction === "en_ru" ? "en" : "ru";
   const targetLanguage = sourceLanguage === "ru" ? "en" : "ru";
   const sourceTokens = estimateTokens(options.source, sourceLanguage);
@@ -55,6 +57,7 @@ export function metricForTranslation(options: { source: string; translated: stri
   return {
     ts: new Date().toISOString(),
     source: options.direction === "en_ru" ? "response_translated" : "prompt_translated",
+    host: options.host,
     provider: options.provider,
     model: options.model,
     direction: options.direction ?? "ru_en",
@@ -122,6 +125,7 @@ export async function readReport(config: RouterConfig, days: number): Promise<Ro
   }
   const bySource: Record<string, ReportBucket> = {};
   const byProvider: Record<string, ReportBucket> = {};
+  const byHost: Record<string, ReportBucket> = {};
   let savedTokens = 0;
   let opportunityTokens = 0;
   let translationCostTokens = 0;
@@ -131,6 +135,7 @@ export async function readReport(config: RouterConfig, days: number): Promise<Ro
     translationCostTokens += number(entry.translate_cost_tokens_est);
     addBucket(bySource, entry.source || "unknown", entry);
     addBucket(byProvider, entry.provider || providerFromHome(home), entry);
+    addBucket(byHost, entry.host || providerFromHome(home), entry);
   }
   const netSavedTokens = savedTokens - translationCostTokens;
   return {
@@ -147,6 +152,7 @@ export async function readReport(config: RouterConfig, days: number): Promise<Ro
     breakEvenReads: savedTokens > 0 && translationCostTokens > 0 ? Math.ceil(translationCostTokens / savedTokens) : null,
     bySource,
     byProvider,
+    byHost,
   };
 }
 
@@ -171,6 +177,10 @@ export function formatReport(report: RouterReport): string {
   lines.push("  by provider:");
   for (const [provider, bucket] of Object.entries(report.byProvider).sort(([a], [b]) => a.localeCompare(b))) {
     lines.push(`    ${provider}: saved ~${formatNumber(bucket.savedTokens)}, cost ~${formatNumber(bucket.costTokens)} (${bucket.events} events)`);
+  }
+  lines.push("  by host:");
+  for (const [host, bucket] of Object.entries(report.byHost).sort(([a], [b]) => a.localeCompare(b))) {
+    lines.push(`    ${host}: saved ~${formatNumber(bucket.savedTokens)}, cost ~${formatNumber(bucket.costTokens)} (${bucket.events} events)`);
   }
   lines.push(`  metrics: ${report.metricsPaths.join(", ")}`);
   return lines.join("\n");

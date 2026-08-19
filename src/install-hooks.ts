@@ -1,5 +1,6 @@
-import { access, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
+import { access, copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -107,7 +108,28 @@ function shellQuote(value: string): string {
   return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
-export interface InstallHooksOptions { dryRun?: boolean; disableOld?: boolean; home?: string; }
+export interface InstallHooksOptions { dryRun?: boolean; disableOld?: boolean; home?: string; registerAgy?: boolean; }
+
+async function registerAgyPlugin(pluginDir: string, home: string): Promise<boolean> {
+  const stagingDir = await mkdtemp(join(tmpdir(), "agent-translate-router-agy-plugin-"));
+  const stagedPlugin = join(stagingDir, "agent-translate-router");
+  try {
+    await mkdir(stagedPlugin, { recursive: true });
+    for (const filename of ["plugin.json", "hooks.json", "mcp_config.json"]) {
+      await copyFile(join(pluginDir, filename), join(stagedPlugin, filename));
+    }
+    return await new Promise<boolean>((resolve) => {
+      execFile("agy", ["plugin", "install", stagedPlugin], {
+        env: { ...process.env, HOME: home },
+        timeout: 15_000,
+      }, (error) => resolve(!error));
+    });
+  } catch {
+    return false;
+  } finally {
+    await rm(stagingDir, { recursive: true, force: true }).catch(() => undefined);
+  }
+}
 
 export async function installClaudeHooks(options: InstallHooksOptions = {}): Promise<string[]> {
   const path = join(options.home ?? homedir(), ".claude", "settings.json");
@@ -162,9 +184,13 @@ export async function installAgyPlugin(options: InstallHooksOptions = {}): Promi
   const configBackup = await backup(configPath, dryRun);
   if (configBackup) backups.push(`backup: ${configBackup}`);
   await saveJson(configPath, mergeAgyConfig(config, options.disableOld !== false), dryRun);
+  const runtimeRegistered = !dryRun && options.registerAgy !== false
+    ? await registerAgyPlugin(pluginDir, home)
+    : false;
   return [
     `Agy: ${dryRun ? "would install" : "installed"} ${pluginDir}`,
     "Agy: registered plugin and PreToolUse view_file hook",
+    `Agy: ${dryRun ? "would register plugin with the Agy runtime" : runtimeRegistered ? "registered plugin with the Agy runtime" : "Agy runtime registration unavailable; local plugin files were preserved"}`,
     "Agy: the old agy-translate plugin is disabled but its package and cache are preserved",
     ...backups,
   ];

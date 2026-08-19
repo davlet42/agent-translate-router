@@ -90,7 +90,7 @@ export async function translateText(text: string, config: RouterConfig, options:
   let model = "";
   for (const chunk of chunks) {
     if (remaining(start, start + (prepared.policy.totalDeadlineMs ?? config.defaults.totalDeadlineMs)) <= 0) {
-      await appendMetric(config.home, { ts: new Date().toISOString(), source: "prompt_fail_open", direction: options.direction ?? "ru_en", text_chars: text.length, complete: false });
+      await appendMetric(config.home, { ts: new Date().toISOString(), source: "prompt_fail_open", host: options.host, direction: options.direction ?? "ru_en", text_chars: text.length, complete: false });
       return { text, provider: "original", model: "", cached: false, complete: false, attempts: allAttempts };
     }
     const result = await routeSegment(chunk, config, options, prepared, start, discoveries, state, requestBlocked);
@@ -101,7 +101,7 @@ export async function translateText(text: string, config: RouterConfig, options:
         continue;
       }
       await saveState(config.home, state);
-      await appendMetric(config.home, { ts: new Date().toISOString(), source: "prompt_fail_open", direction: options.direction ?? "ru_en", text_chars: text.length, complete: false });
+      await appendMetric(config.home, { ts: new Date().toISOString(), source: "prompt_fail_open", host: options.host, direction: options.direction ?? "ru_en", text_chars: text.length, complete: false });
       return { text, provider: "original", model: "", cached: false, complete: false, attempts: allAttempts };
     }
     translated.push(result.text);
@@ -110,7 +110,7 @@ export async function translateText(text: string, config: RouterConfig, options:
   }
   await saveState(config.home, state);
   const finalText = translated.join("\n\n");
-  if (provider !== "original") await appendMetric(config.home, { ...metricForTranslation({ source: text, translated: finalText, provider, model, direction: options.direction }), complete: true });
+  if (provider !== "original") await appendMetric(config.home, { ...metricForTranslation({ source: text, translated: finalText, host: options.host, provider, model, direction: options.direction }), complete: true });
   return { text: finalText, provider, model, cached: false, complete: true, attempts: allAttempts };
 }
 
@@ -124,7 +124,7 @@ export async function translateDocument(sourcePath: string, config: RouterConfig
   const ownHome = config.cache.ownDir;
   const cache = await findCache({ homes: config.cache.siblingHomes, ownHome, readSiblings: config.cache.readSiblings, slug, sourcePath: absoluteSource, root, sourceSha256 });
   if (cache.fullText) {
-    await appendMetric(config.home, { ...metricForTranslation({ source: sourceText, translated: cache.fullText, provider: "cache", projectSlug: slug, sourcePath: absoluteSource }), source: "doc_cache_served", translate_cost_tokens_est: 0, complete: true });
+    await appendMetric(config.home, { ...metricForTranslation({ source: sourceText, translated: cache.fullText, host: options.host, provider: "cache", projectSlug: slug, sourcePath: absoluteSource }), source: "doc_cache_served", translate_cost_tokens_est: 0, complete: true });
     return { text: cache.fullText, provider: "cache", model: "", cached: true, complete: true, attempts: [], sourceSha256, segments: 1, translatedSegments: 1, cachePath: cache.path };
   }
 
@@ -149,7 +149,7 @@ export async function translateDocument(sourcePath: string, config: RouterConfig
     if (!result.complete || !result.text) {
       if (!(prepared.policy.allowPartial ?? config.defaults.allowPartial)) {
         await saveState(config.home, state);
-        await appendMetric(config.home, { ts: new Date().toISOString(), source: "doc_fail_open", project_slug: slug, source_path: absoluteSource, text_chars: sourceText.length, segments: chunks.length, complete: false });
+        await appendMetric(config.home, { ts: new Date().toISOString(), source: "doc_fail_open", host: options.host, project_slug: slug, source_path: absoluteSource, text_chars: sourceText.length, segments: chunks.length, complete: false });
         return { text: sourceText, provider: "original", model: "", cached: false, complete: false, attempts, sourceSha256, segments: chunks.length, translatedSegments, cachePath: cache.path };
       }
       outputs.push(chunk);
@@ -165,7 +165,7 @@ export async function translateDocument(sourcePath: string, config: RouterConfig
   let cachePath = cache.path;
   await saveState(config.home, state);
   if (config.cache.writeOwn) cachePath = await writeCache({ home: config.cache.ownDir, slug, sourcePath: absoluteSource, root, sourceSha256, body: finalText, sections: sectionMap });
-  if (attempts.length === 0) await appendMetric(config.home, { ...metricForTranslation({ source: sourceText, translated: finalText, provider: "cache", projectSlug: slug, sourcePath: absoluteSource }), source: "doc_cache_served", translate_cost_tokens_est: 0, segments: chunks.length, complete: true });
-  else await appendMetric(config.home, { ...metricForTranslation({ source: sourceText, translated: finalText, provider: lastProvider, model: lastModel, projectSlug: slug, sourcePath: absoluteSource }), source: "doc_translate_cost", segments: chunks.length, complete: true });
+  if (attempts.length === 0) await appendMetric(config.home, { ...metricForTranslation({ source: sourceText, translated: finalText, host: options.host, provider: "cache", projectSlug: slug, sourcePath: absoluteSource }), source: "doc_cache_served", translate_cost_tokens_est: 0, segments: chunks.length, complete: true });
+  else await appendMetric(config.home, { ...metricForTranslation({ source: sourceText, translated: finalText, host: options.host, provider: lastProvider, model: lastModel, projectSlug: slug, sourcePath: absoluteSource }), source: "doc_translate_cost", segments: chunks.length, complete: true });
   return { text: finalText, provider: lastProvider, model: lastModel, cached: translatedSegments === chunks.length && attempts.length === 0, complete: true, attempts, sourceSha256, segments: chunks.length, translatedSegments, cachePath };
 }

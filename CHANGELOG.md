@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.11 — 2026-08-20
+
+- Add host-aware metrics and a `by host` report section for Claude, Cursor, Agy, and Codex hooks.
+- Record the requesting host on successful, cached, prompt, and fail-open translation events.
+- Reduce the default Markdown segment size from 12000 to 4000 characters to avoid oversized-generation timeouts.
+- Make `install-hooks agy` register the plugin through Agy's runtime manager using a separate staging directory.
+
 ## 0.1.10 — 2026-08-20
 
 - Raise the default provider segment timeout from 6 to 45 seconds.

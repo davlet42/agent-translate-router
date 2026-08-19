@@ -23,7 +23,9 @@ agent-translate-router install-mcp all
 
 Claude receives `agent-translate-router hook claude-pretool`, Cursor receives `agent-translate-router hook cursor-pretool`, and Agy receives `agent-translate-router hook agy-pretool` through a registered local plugin. The Agy plugin registers only the `view_file` matcher and updates `import_manifest.json`; existing configuration is backed up before writing. Codex has no generic pre-tool hook, so its integration is MCP-based.
 
-The generated native hooks allow up to 360 seconds. The router defaults to 45 seconds per provider call and 300 seconds for the complete request, including fallback attempts and all document segments. These values deliberately include headroom for cold CLI startup and large Markdown files.
+The generated native hooks allow up to 360 seconds. The router defaults to 45 seconds per provider call, 4000 characters per segment, and 300 seconds for the complete request, including fallback attempts and all document segments. These values deliberately include headroom for cold CLI startup and large Markdown files.
+
+The report's `by provider` section identifies the CLI that translated the text; `by host` identifies the agent that requested the read. Thus an Agy read translated by Codex is shown under `codex` and `agy` respectively.
 
 `install-mcp all` registers `agent-translate-router-mcp` with Codex, Cursor, Claude, and Agy. It disables only `codex-translate`, `cursor-translate`, `claude-translate`, and `agy-translate` MCP/plugin integrations; Figma, Atlassian, Playwright, Pencil, and other unrelated servers are preserved.
 

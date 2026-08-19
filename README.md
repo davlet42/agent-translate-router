@@ -15,6 +15,7 @@ The router does not depend on `codex-translate`, `agy-translate`, `cursor-transl
 - No direct provider API calls are made by the router.
 - Provider timeouts use one equal default for every provider: `45000ms` per segment.
 - A request-wide deadline defaults to `300000ms` (5 minutes) and is shared by all segments and fallback attempts.
+- Markdown chunks default to `4000` characters so technical Russian documents do not spend 45 seconds generating one oversized segment.
 - Large Markdown files are split into stable sections/chunks.
 - A segment is accepted only after a completion marker is returned.
 - By default, an incomplete document is never written to cache: the complete original is returned (fail-open).
@@ -54,7 +55,7 @@ defaults:
   policy: cheap-first
   total_deadline_ms: 300000
   segment_timeout_ms: 45000
-  max_chunk_chars: 12000
+  max_chunk_chars: 4000
   probe_timeout_ms: 1500
   allow_partial: false
   fail_open: true
@@ -82,7 +83,7 @@ policies:
   cheap-first:
     total_deadline_ms: 300000
     segment_timeout_ms: 45000
-    max_chunk_chars: 12000
+    max_chunk_chars: 4000
     allow_partial: false
     providers:
       - provider: codex
@@ -147,6 +148,8 @@ agent-translate-router cache-stats
 ```
 
 It returns `decision: allow`, translated content/read path, provider/model metadata, and `failOpen`. The native adapters rewrite only a successful Markdown read to the shared English cache path. The generated native hook timeout is 360 seconds, leaving margin above the five-minute request deadline. Missing CLIs, quota errors, timeouts, invalid output, and incomplete documents remain fail-open: the host reads the original file.
+
+Reports separate the translation executor (`by provider`) from the requesting host (`by host`). For example, a document read by Agy and translated by Codex appears as `codex` under providers and `agy` under hosts.
 
 ## Cross-provider MCP
 

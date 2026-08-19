@@ -28,7 +28,7 @@ test("Claude and Cursor hook installers preserve unrelated hooks and replace rou
 test("Agy installer registers only the current view_file tool name", async () => {
   const home = await mkdtemp(join(tmpdir(), "agent-router-agy-hooks-"));
   const { installAgyPlugin } = await import("../dist/install-hooks.js");
-  await installAgyPlugin({ home });
+  await installAgyPlugin({ home, registerAgy: false });
   const hooks = JSON.parse(await (await import("node:fs/promises")).readFile(join(home, ".gemini", "config", "plugins", "agent-translate-router", "hooks.json"), "utf8"));
   assert.deepEqual(
     hooks["agent-translate-router-read"].PreToolUse.map((entry) => entry.matcher),
