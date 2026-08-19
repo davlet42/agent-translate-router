@@ -1,6 +1,6 @@
 {
   "name": "agent-translate-router",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Standalone cross-provider translation router for AI-agent hooks with ordered fallbacks and shared caches",
   "license": "MIT",
   "type": "module",
@@ -16,15 +16,42 @@
   "exports": {
     ".": "./dist/index.js"
   },
-  "files": ["dist", "templates", "docs", "README.md", "CHANGELOG.md", "LICENSE"],
+  "files": [
+    "dist",
+    "templates",
+    "docs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json && chmod +x dist/cli.js",
     "test": "npm run build && node --test test/*.test.mjs",
     "prepack": "npm test"
   },
-  "keywords": ["ai", "agent", "translation", "router", "hooks", "codex", "claude", "agy", "cursor"],
-  "engines": {"node": ">=24"},
-  "dependencies": {"yaml": "^2.8.1"},
-  "devDependencies": {"@types/node": "^22.0.0", "typescript": "^5.7.0"},
-  "publishConfig": {"access": "public", "registry": "https://registry.npmjs.org/"}
+  "keywords": [
+    "ai",
+    "agent",
+    "translation",
+    "router",
+    "hooks",
+    "codex",
+    "claude",
+    "agy",
+    "cursor"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }
