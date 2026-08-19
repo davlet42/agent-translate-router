@@ -1,0 +1,149 @@
+# agent-translate-router
+
+Standalone cross-provider translation router for AI-agent hooks.
+
+It translates text and Markdown through locally installed provider CLIs, using an ordered policy such as:
+
+```text
+Codex / gpt-5.6-luna (Low) → Agy → Cursor → Claude → original text
+```
+
+The router does not depend on `codex-translate`, `agy-translate`, `cursor-translate`, or `claude-translate` being installed. It invokes provider CLIs directly and can read their existing document caches without importing their packages.
+
+## Important behavior
+
+- No direct provider API calls are made by the router.
+- Provider timeouts use one equal default for every provider: `6000ms` per segment.
+- A request-wide deadline defaults to `12000ms` and is shared by all segments and fallback attempts.
+- Large Markdown files are split into stable sections/chunks.
+- A segment is accepted only after a completion marker is returned.
+- By default, an incomplete document is never written to cache: the complete original is returned (fail-open).
+- Existing caches under `~/.cursor/translate-proxy`, `~/.claude/translate-proxy`, `~/.gemini/translate-proxy`, and `~/.codex/translate-proxy` are read automatically.
+- New cache entries are written to `~/.agent-translate-router/cache` by default.
+
+OpenAI's official model guidance describes GPT-5.6 Luna as optimized for cost-sensitive, high-volume workloads and supports low reasoning effort for latency-sensitive tasks. The router still treats the Codex CLI and its subscription authentication as the runtime boundary; it does not call the OpenAI API. ([OpenAI Docs](https://developers.openai.com/api/docs/models/gpt-5.6-luna))
+
+## Install
+
+```bash
+npm install -g agent-translate-router
+agent-translate-router init
+```
+
+Use a project checkout during development:
+
+```bash
+npm ci
+npm test
+npm run build
+```
+
+## Configure
+
+The generated file is `~/.agent-translate-router/config.yaml`. The complete example is in [`templates/config.yaml`](templates/config.yaml).
+
+```yaml
+defaults:
+  policy: cheap-first
+  total_deadline_ms: 12000
+  segment_timeout_ms: 6000
+  max_chunk_chars: 12000
+  probe_timeout_ms: 1500
+  allow_partial: false
+  fail_open: true
+
+providers:
+  codex:
+    enabled: auto
+    command: codex
+    model: gpt-5.6-luna
+    effort: low
+  agy:
+    enabled: auto
+    command: agy
+    model: Gemini 3.7 Flash (Low)
+  cursor:
+    enabled: auto
+    command: agent
+    model: auto
+  claude:
+    enabled: auto
+    command: claude
+    model: claude-haiku-4-5
+
+policies:
+  cheap-first:
+    total_deadline_ms: 12000
+    segment_timeout_ms: 6000
+    max_chunk_chars: 12000
+    allow_partial: false
+    providers:
+      - provider: codex
+      - provider: agy
+      - provider: cursor
+      - provider: claude
+
+hooks:
+  codex: cheap-first
+  claude: cheap-first
+  agy: cheap-first
+  cursor: cheap-first
+
+cache:
+  own_dir: ~/.agent-translate-router/cache
+  read_siblings: true
+  write_own: true
+```
+
+The same `segment_timeout_ms` is used for every provider unless a policy step explicitly overrides it:
+
+```yaml
+providers:
+  - provider: codex
+    timeout_ms: 4500
+  - provider: agy
+    timeout_ms: 4500
+```
+
+`total_deadline_ms` remains the upper bound for the complete request. If it expires in the middle of a large document, the default result is the untouched original document.
+
+## Commands
+
+```bash
+agent-translate-router providers
+agent-translate-router doctor
+agent-translate-router policy explain --host claude
+agent-translate-router policy validate
+agent-translate-router translate "Русский prompt" --host claude --json
+agent-translate-router doc README.md --json
+agent-translate-router hook-resolve < hook.json
+agent-translate-router cache-stats
+```
+
+`providers` checks CLI availability and performs non-generating auth checks where the provider supports them. It never sends a translation request during discovery. Quota state is learned from real provider failures and should be persisted by the next state/circuit-breaker layer.
+
+## Hook contract
+
+`hook-resolve` accepts neutral JSON with either a text field or a Markdown path:
+
+```json
+{"host":"claude","text":"Русский prompt"}
+```
+
+```json
+{"host":"claude","tool_input":{"file_path":"/project/README.md"}}
+```
+
+It returns `decision: allow`, translated content/read path, provider/model metadata, and `failOpen`. Provider-specific hook adapters can map this neutral result to Claude, Codex, Agy, or Cursor hook contracts.
+
+## Cache compatibility
+
+The reader understands the existing `cursor-translate` / `claude-translate` frontmatter and `.en.sections.json` sidecars. Full-document cache hits are preferred; if the source SHA changed, reusable section hashes are merged from every configured sibling home. Newly completed documents are written in the compatible frontmatter/sidecar format under the router's own cache.
+
+## Safety and recursion
+
+Provider subprocesses receive `AGENT_TRANSLATE_ROUTER_ACTIVE=1` and `AGENT_TRANSLATE_ROUTER_HOP=1`. Integrations should bypass their own translation hook when those markers are present, especially when Claude is the last fallback in a Claude hook.
+
+## License
+
+MIT.

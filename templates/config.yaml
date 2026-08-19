@@ -1,0 +1,61 @@
+schema: 1
+
+defaults:
+  policy: cheap-first
+  total_deadline_ms: 12000
+  segment_timeout_ms: 6000
+  max_chunk_chars: 12000
+  probe_timeout_ms: 1500
+  allow_partial: false
+  fail_open: true
+
+providers:
+  codex:
+    enabled: auto
+    command: codex
+    model: gpt-5.6-luna
+    effort: low
+  agy:
+    enabled: auto
+    command: agy
+    model: Gemini 3.7 Flash (Low)
+  cursor:
+    enabled: auto
+    command: agent
+    model: auto
+  claude:
+    enabled: auto
+    command: claude
+    model: claude-haiku-4-5
+
+policies:
+  cheap-first:
+    total_deadline_ms: 12000
+    segment_timeout_ms: 6000
+    max_chunk_chars: 12000
+    allow_partial: false
+    providers:
+      - provider: codex
+        on: [missing, auth, quota, rate_limit, timeout, unavailable, invalid_output]
+      - provider: agy
+        on: [missing, auth, quota, rate_limit, timeout, unavailable, invalid_output]
+      - provider: cursor
+        on: [missing, auth, quota, rate_limit, timeout, unavailable, invalid_output]
+      - provider: claude
+        on: [missing, auth, quota, rate_limit, timeout, unavailable, invalid_output]
+
+hooks:
+  codex: cheap-first
+  claude: cheap-first
+  agy: cheap-first
+  cursor: cheap-first
+
+cache:
+  own_dir: ~/.agent-translate-router/cache
+  sibling_homes:
+    - ~/.cursor/translate-proxy
+    - ~/.claude/translate-proxy
+    - ~/.gemini/translate-proxy
+    - ~/.codex/translate-proxy
+  read_siblings: true
+  write_own: true
