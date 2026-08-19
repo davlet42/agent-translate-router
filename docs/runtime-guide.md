@@ -25,6 +25,13 @@ Claude receives `agent-translate-router hook claude-pretool`, Cursor receives `a
 
 `install-mcp all` registers `agent-translate-router-mcp` with Codex, Cursor, Claude, and Agy. It disables only `codex-translate`, `cursor-translate`, `claude-translate`, and `agy-translate` MCP/plugin integrations; Figma, Atlassian, Playwright, Pencil, and other unrelated servers are preserved.
 
+The unified economy report reads the router metrics and compatible historical sibling metrics:
+
+```bash
+agent-translate-router report --days 7
+agent-translate-router report --days 30 --json
+```
+
 Hook integrations should pass the host in their JSON input:
 
 ```json

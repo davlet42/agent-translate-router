@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4 — 2026-08-19
+
+- Added `report [--days N] [--json]` with cross-provider token savings and ROI aggregation.
+- Added router metrics for prompt translations, document translation costs, cache-served documents, and fail-open events.
+- Reads compatible historical metrics from Codex, Agy, Cursor, and Claude sibling homes.
+
 ## 0.1.3 — 2026-08-19
 
 - Added the cross-provider `agent-translate-router-mcp` server with `translate` and `resolve_doc` tools.

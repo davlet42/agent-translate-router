@@ -9,6 +9,7 @@ import { translateDocument, translateText } from "./router.js";
 import { runHostHook } from "./hook-adapters.js";
 import { installHooks } from "./install-hooks.js";
 import { installMcp } from "./install-mcp.js";
+import { formatReport, readReport } from "./metrics.js";
 import type { HostId, ProviderId, RouterConfig } from "./types.js";
 
 function flag(args: string[], name: string): string | undefined {
@@ -89,6 +90,13 @@ async function doc(args: string[], config: RouterConfig): Promise<void> {
   else console.log(`${result.text}\n\n[${result.provider}${result.complete ? "" : " / fail-open"}; segments ${result.translatedSegments}/${result.segments}; cache ${result.cachePath ?? "none"}]`);
 }
 
+async function report(args: string[], config: RouterConfig): Promise<void> {
+  const daysValue = flag(args, "--days");
+  const days = daysValue && Number.isFinite(Number(daysValue)) && Number(daysValue) > 0 ? Math.round(Number(daysValue)) : 7;
+  const result = await readReport(config, days);
+  console.log(has(args, "--json") ? JSON.stringify(result, null, 2) : formatReport(result));
+}
+
 async function hookResolve(config: RouterConfig): Promise<void> {
   let raw = "";
   for await (const chunk of process.stdin) raw += chunk;
@@ -137,6 +145,7 @@ async function main(): Promise<void> {
     for (const line of await installMcp(target, { dryRun: has(args, "--dry-run"), disableOld: !has(args, "--no-disable") })) console.log(line);
     return;
   }
+  if (command === "report") return report(args.slice(1), config);
   if (command === "cache-stats") { console.log(JSON.stringify(await cacheStats(config.home), null, 2)); return; }
   console.log(`agent-translate-router
 
@@ -151,6 +160,7 @@ Commands:
   hook-resolve
   install-hooks [all|claude|cursor|agy|codex] [--dry-run] [--no-disable]
   install-mcp [all|claude|cursor|agy|codex] [--dry-run] [--no-disable]
+  report [--days 7] [--json]
   cache-stats
 
 Default chain: codex → agy → cursor → claude → original text`);
