@@ -25,8 +25,8 @@ The `on` list on a policy step controls which classes advance to the next provid
 ```yaml
 policies:
   cheap-first:
-    total_deadline_ms: 12000
-    segment_timeout_ms: 6000
+    total_deadline_ms: 300000
+    segment_timeout_ms: 45000
     allow_partial: false
     providers:
       - provider: codex
@@ -35,8 +35,8 @@ policies:
       - provider: claude
 
   subscription-only:
-    total_deadline_ms: 10000
-    segment_timeout_ms: 5000
+    total_deadline_ms: 300000
+    segment_timeout_ms: 45000
     allow_partial: false
     providers:
       - provider: codex
@@ -44,8 +44,8 @@ policies:
       - provider: cursor
 
   codex-only:
-    total_deadline_ms: 8000
-    segment_timeout_ms: 6000
+    total_deadline_ms: 180000
+    segment_timeout_ms: 45000
     allow_partial: false
     providers:
       - provider: codex

@@ -5,6 +5,8 @@ import { parse } from "yaml";
 import type { PolicyConfig, ProviderConfig, ProviderId, RouterConfig } from "./types.js";
 
 export const PROVIDERS: ProviderId[] = ["codex", "agy", "cursor", "claude"];
+export const DEFAULT_TOTAL_DEADLINE_MS = 300_000;
+export const DEFAULT_SEGMENT_TIMEOUT_MS = 45_000;
 
 const defaultHome = resolve(process.env.AGENT_TRANSLATE_HOME?.trim() || join(homedir(), ".agent-translate-router"));
 const defaultSiblings = [
@@ -32,8 +34,8 @@ function cheapFirst(): PolicyConfig {
   const on = ["missing", "auth", "quota", "rate_limit", "timeout", "unavailable", "invalid_output"] as const;
   return {
     providers: PROVIDERS.map((provider) => ({ provider, on: [...on] })),
-    totalDeadlineMs: 12000,
-    segmentTimeoutMs: 6000,
+    totalDeadlineMs: DEFAULT_TOTAL_DEADLINE_MS,
+    segmentTimeoutMs: DEFAULT_SEGMENT_TIMEOUT_MS,
     maxChunkChars: 12000,
     allowPartial: false,
   };
@@ -44,8 +46,8 @@ export function defaultConfig(): RouterConfig {
     home: defaultHome,
     defaults: {
       policy: "cheap-first",
-      totalDeadlineMs: 12000,
-      segmentTimeoutMs: 6000,
+      totalDeadlineMs: DEFAULT_TOTAL_DEADLINE_MS,
+      segmentTimeoutMs: DEFAULT_SEGMENT_TIMEOUT_MS,
       maxChunkChars: 12000,
       probeTimeoutMs: 1500,
       allowPartial: false,

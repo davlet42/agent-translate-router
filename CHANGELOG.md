@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.10 — 2026-08-20
+
+- Raise the default provider segment timeout from 6 to 45 seconds.
+- Raise the default whole-request deadline from 12 seconds to 5 minutes.
+- Raise generated Claude, Cursor, and Agy hook timeouts to 360 seconds, leaving headroom above the request deadline.
+
 ## 0.1.9 — 2026-08-19
 
 - Parse Antigravity `toolCall.args` / `toolCall.arguments` and `workspacePaths` in the Agy hook.

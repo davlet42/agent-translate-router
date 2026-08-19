@@ -2,8 +2,8 @@ schema: 1
 
 defaults:
   policy: cheap-first
-  total_deadline_ms: 12000
-  segment_timeout_ms: 6000
+  total_deadline_ms: 300000
+  segment_timeout_ms: 45000
   max_chunk_chars: 12000
   probe_timeout_ms: 1500
   allow_partial: false
@@ -30,8 +30,8 @@ providers:
 
 policies:
   cheap-first:
-    total_deadline_ms: 12000
-    segment_timeout_ms: 6000
+    total_deadline_ms: 300000
+    segment_timeout_ms: 45000
     max_chunk_chars: 12000
     allow_partial: false
     providers:

@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 type JsonObject = Record<string, unknown>;
 type HookEntry = Record<string, unknown>;
+const DEFAULT_HOOK_TIMEOUT_SEC = 360;
 
 function object(value: unknown): JsonObject {
   return value && typeof value === "object" && !Array.isArray(value) ? value as JsonObject : {};
@@ -29,7 +30,7 @@ export function mergeClaudeSettings(input: JsonObject, disableOld = true): JsonO
   const hooks = { ...object(result.hooks) };
   const cleaned = Object.fromEntries(Object.entries(hooks).map(([event, value]) => [event, array(value).filter((entry) => !isRouterCommand(entry))]));
   const preToolUse = array(cleaned.PreToolUse);
-  preToolUse.push({ matcher: "Read", hooks: [{ type: "command", command: "agent-translate-router hook claude-pretool", timeout: 12 }] });
+  preToolUse.push({ matcher: "Read", hooks: [{ type: "command", command: "agent-translate-router hook claude-pretool", timeout: DEFAULT_HOOK_TIMEOUT_SEC }] });
   cleaned.PreToolUse = preToolUse;
   result.hooks = cleaned;
   return result;
@@ -40,7 +41,7 @@ export function mergeCursorHooks(input: JsonObject): JsonObject {
   const hooks = { ...object(result.hooks) };
   const cleaned = Object.fromEntries(Object.entries(hooks).map(([event, value]) => [event, array(value).filter((entry) => !isRouterCommand(entry))]));
   const preToolUse = array(cleaned.preToolUse);
-  preToolUse.push({ command: "agent-translate-router hook cursor-pretool", matcher: "Read", timeout: 12 });
+  preToolUse.push({ command: "agent-translate-router hook cursor-pretool", matcher: "Read", timeout: DEFAULT_HOOK_TIMEOUT_SEC });
   cleaned.preToolUse = preToolUse;
   result.hooks = cleaned;
   return result;
@@ -84,7 +85,7 @@ export function mergeAgyConfig(input: JsonObject, disableOld = true): JsonObject
 }
 
 function agyReadHook(command: string, matcher: string): JsonObject {
-  return { matcher, hooks: [{ type: "command", command, timeout: 12 }] };
+  return { matcher, hooks: [{ type: "command", command, timeout: DEFAULT_HOOK_TIMEOUT_SEC }] };
 }
 
 export function mergeAgyImportManifest(input: JsonObject, name: string, components: string[]): JsonObject {

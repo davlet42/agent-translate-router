@@ -34,6 +34,7 @@ test("Agy installer registers only the current view_file tool name", async () =>
     hooks["agent-translate-router-read"].PreToolUse.map((entry) => entry.matcher),
     ["view_file"],
   );
+  assert.equal(hooks["agent-translate-router-read"].PreToolUse[0].hooks[0].timeout, 360);
   const manifest = JSON.parse(await (await import("node:fs/promises")).readFile(join(home, ".gemini", "config", "import_manifest.json"), "utf8"));
   assert.deepEqual(manifest.imports[0].components, ["mcpServers", "hooks"]);
   assert.equal(manifest.imports[0].source, "antigravity");
