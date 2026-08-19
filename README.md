@@ -120,7 +120,7 @@ agent-translate-router hook-resolve < hook.json
 agent-translate-router cache-stats
 ```
 
-`providers` checks CLI availability and performs non-generating auth checks where the provider supports them. It never sends a translation request during discovery. Quota state is learned from real provider failures and should be persisted by the next state/circuit-breaker layer.
+`providers` checks CLI availability and performs non-generating auth checks where the provider supports them. It never sends a translation request during discovery. Quota and transient failure state is learned from real provider failures and persisted with cooldowns in `~/.agent-translate-router/state.json`, so a broken provider is not retried for every segment.
 
 ## Hook contract
 
