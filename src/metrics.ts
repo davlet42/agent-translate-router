@@ -88,7 +88,8 @@ function addBucket(map: Record<string, ReportBucket>, key: string, entry: Metric
 
 function providerFromHome(home: string): string {
   const parent = basename(dirname(home)).replace(/^\./u, "");
-  return ["codex", "gemini", "claude", "cursor"].includes(parent) ? parent : "router";
+  if (parent === "gemini") return "agy";
+  return ["codex", "claude", "cursor"].includes(parent) ? parent : "router";
 }
 
 function isOpportunitySource(source: string): boolean {

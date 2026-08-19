@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6 — 2026-08-19
+
+- Fixed legacy `.gemini/translate-proxy` metrics to be reported under the `agy` provider name.
+
 ## 0.1.5 — 2026-08-19
 
 - Fixed installed Agy plugin and MCP server metadata to derive their version from the package instead of a stale hardcoded value.
