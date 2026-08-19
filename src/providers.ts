@@ -16,6 +16,10 @@ function runProcess(command: string, args: string[], input: string, timeoutMs: n
     let stdout = ""; let stderr = ""; let timedOut = false;
     child.stdout.on("data", (chunk) => { stdout += chunk; });
     child.stderr.on("data", (chunk) => { stderr += chunk; });
+    // A provider may exit after producing its response before the full prompt
+    // has been flushed (common for tiny test/healthcheck commands). That is a
+    // subprocess result, not a router crash.
+    child.stdin.on("error", () => undefined);
     const timer = setTimeout(() => { timedOut = true; child.kill("SIGTERM"); setTimeout(() => child.kill("SIGKILL"), 250).unref(); }, timeoutMs);
     child.on("error", (error) => { clearTimeout(timer); resolve({ stdout, stderr: `${stderr}\n${error.message}`, code: null, timedOut }); });
     child.on("close", (code) => { clearTimeout(timer); resolve({ stdout, stderr, code, timedOut }); });
