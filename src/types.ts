@@ -1,6 +1,7 @@
 export type ProviderId = "codex" | "agy" | "cursor" | "claude";
 export type HostId = ProviderId | "unknown";
 export type EventKind = "prompt" | "file_read" | "document" | "response";
+export type TranslationDirection = "ru_en" | "en_ru";
 export type FailureKind = "missing" | "auth" | "quota" | "rate_limit" | "timeout" | "unavailable" | "invalid_output" | "unknown";
 
 export interface ProviderConfig {

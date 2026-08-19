@@ -43,9 +43,10 @@ export function isCompleteTranslation(text: string, source: string): boolean {
   return source.trim().length === 0 || value.length > 0;
 }
 
-export function buildTranslationPrompt(text: string, glossary = ""): { system: string; prompt: string } {
+export function buildTranslationPrompt(text: string, glossary = "", direction: "ru_en" | "en_ru" = "ru_en"): { system: string; prompt: string } {
+  const language = direction === "en_ru" ? "English text to natural Russian" : "Russian text to clear natural English";
   const system = [
-    "You are a translation sub-agent. Translate Russian text to clear natural English.",
+    `You are a translation sub-agent. Translate ${language}.`,
     "Preserve Markdown structure, headings, code fences, links, URLs, identifiers, file paths, and placeholders exactly.",
     "Do not summarize, explain, omit, reorder, or add content.",
     "Return only the complete translated text, followed by the exact marker __AGENT_TRANSLATE_DONE__.",

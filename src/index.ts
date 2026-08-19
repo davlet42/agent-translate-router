@@ -5,4 +5,5 @@ export { findCache, writeCache, cachePath, projectRoot, projectSlug } from "./ca
 export { sha256, splitText } from "./segments.js";
 export { adaptAgyPretool, adaptClaudePretool, adaptCursorPretool, runHostHook } from "./hook-adapters.js";
 export { installHooks, mergeClaudeSettings, mergeCursorHooks } from "./install-hooks.js";
+export { installMcp, mergeCodexMcp, mergeCursorMcp } from "./install-mcp.js";
 export type * from "./types.js";

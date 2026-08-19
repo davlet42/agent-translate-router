@@ -8,6 +8,7 @@ import { cacheStats } from "./cache.js";
 import { translateDocument, translateText } from "./router.js";
 import { runHostHook } from "./hook-adapters.js";
 import { installHooks } from "./install-hooks.js";
+import { installMcp } from "./install-mcp.js";
 import type { HostId, ProviderId, RouterConfig } from "./types.js";
 
 function flag(args: string[], name: string): string | undefined {
@@ -131,6 +132,11 @@ async function main(): Promise<void> {
     for (const line of await installHooks(target, { dryRun: has(args, "--dry-run"), disableOld: !has(args, "--no-disable") })) console.log(line);
     return;
   }
+  if (command === "install-mcp") {
+    const target = args[1]?.startsWith("--") ? undefined : args[1];
+    for (const line of await installMcp(target, { dryRun: has(args, "--dry-run"), disableOld: !has(args, "--no-disable") })) console.log(line);
+    return;
+  }
   if (command === "cache-stats") { console.log(JSON.stringify(await cacheStats(config.home), null, 2)); return; }
   console.log(`agent-translate-router
 
@@ -144,6 +150,7 @@ Commands:
   hook claude-pretool|cursor-pretool|agy-pretool
   hook-resolve
   install-hooks [all|claude|cursor|agy|codex] [--dry-run] [--no-disable]
+  install-mcp [all|claude|cursor|agy|codex] [--dry-run] [--no-disable]
   cache-stats
 
 Default chain: codex → agy → cursor → claude → original text`);

@@ -1,6 +1,6 @@
 {
   "name": "agent-translate-router",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Standalone cross-provider translation router for AI-agent hooks with ordered fallbacks and shared caches",
   "license": "MIT",
   "type": "module",
@@ -11,7 +11,8 @@
   "homepage": "https://github.com/davlet42/agent-translate-router",
   "bin": {
     "agent-translate-router": "dist/cli.js",
-    "agent-translate-router-hook": "dist/cli.js"
+    "agent-translate-router-hook": "dist/cli.js",
+    "agent-translate-router-mcp": "dist/mcp-server.js"
   },
   "exports": {
     ".": "./dist/index.js"
@@ -25,7 +26,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && chmod +x dist/cli.js",
+    "build": "tsc -p tsconfig.json && chmod +x dist/cli.js dist/mcp-server.js",
     "test": "npm run build && node --test test/*.test.mjs",
     "prepack": "npm test"
   },

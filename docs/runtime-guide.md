@@ -17,9 +17,13 @@ To connect the native `Read` hooks:
 ```bash
 agent-translate-router install-hooks --dry-run all
 agent-translate-router install-hooks all
+agent-translate-router install-mcp --dry-run all
+agent-translate-router install-mcp all
 ```
 
-Claude receives `agent-translate-router hook claude-pretool`, and Cursor receives `agent-translate-router hook cursor-pretool`. Existing configuration is backed up before writing. The Agy adapter is available as `agent-translate-router hook agy-pretool`, but Agy installations do not share one reliable global hook file, so wire it into the project/plugin `view-file` or `PreToolUse` hook. Codex currently has no generic pre-tool hook in this package; keep its MCP integration and use `hook-resolve` where a neutral hook runner is available.
+Claude receives `agent-translate-router hook claude-pretool`, Cursor receives `agent-translate-router hook cursor-pretool`, and Agy receives `agent-translate-router hook agy-pretool` through a local router plugin. Existing configuration is backed up before writing. Codex has no generic pre-tool hook, so its integration is MCP-based.
+
+`install-mcp all` registers `agent-translate-router-mcp` with Codex, Cursor, Claude, and Agy. It disables only `codex-translate`, `cursor-translate`, `claude-translate`, and `agy-translate` MCP/plugin integrations; Figma, Atlassian, Playwright, Pencil, and other unrelated servers are preserved.
 
 Hook integrations should pass the host in their JSON input:
 

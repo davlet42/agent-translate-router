@@ -30,9 +30,11 @@ npm install -g agent-translate-router
 agent-translate-router init
 agent-translate-router install-hooks --dry-run all
 agent-translate-router install-hooks all
+agent-translate-router install-mcp --dry-run all
+agent-translate-router install-mcp all
 ```
 
-The installer backs up existing configuration before changing it. It connects the `Read` adapter for Claude and Cursor, disables the old Claude translation plugin entry, and removes only old translation hook entries from Cursor. It does not delete old packages or caches. Agy and Codex are reported without modifying guessed configuration paths.
+The installers back up existing configuration before changing it. `install-hooks` connects the `Read` adapter for Claude, Cursor, and the installed Agy plugin. `install-mcp` registers one cross-provider server and disables only the old translation MCP integrations; unrelated MCP servers and old packages/caches remain untouched.
 
 Use a project checkout during development:
 
@@ -125,6 +127,7 @@ agent-translate-router hook cursor-pretool < hook.json
 agent-translate-router hook agy-pretool < hook.json
 agent-translate-router hook-resolve < hook.json
 agent-translate-router install-hooks [all|claude|cursor|agy|codex] [--dry-run] [--no-disable]
+agent-translate-router install-mcp [all|claude|cursor|agy|codex] [--dry-run] [--no-disable]
 agent-translate-router cache-stats
 ```
 
@@ -143,6 +146,15 @@ agent-translate-router cache-stats
 ```
 
 It returns `decision: allow`, translated content/read path, provider/model metadata, and `failOpen`. The native adapters rewrite only a successful Markdown read to the shared English cache path. Missing CLIs, quota errors, timeouts, invalid output, and incomplete documents remain fail-open: the host reads the original file.
+
+## Cross-provider MCP
+
+`agent-translate-router-mcp` exposes the same two tools to every host:
+
+- `translate` — RU↔EN through the configured provider policy;
+- `resolve_doc` — resolve a Markdown file to a complete English shared-cache document.
+
+The MCP server uses the same local CLI providers, timeouts, circuit breaker, sibling caches, and fail-open behavior as hooks. It does not call OpenAI, Anthropic, Google, or Cursor APIs directly. After `install-mcp all`, the old provider-specific translation MCPs are disabled while unrelated MCP servers stay enabled.
 
 ## Cache compatibility
 

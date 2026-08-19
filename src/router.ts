@@ -3,7 +3,7 @@ import { buildTranslationPrompt, isCompleteTranslation, sha256, splitText, strip
 import { findCache, projectRoot, projectSlug, writeCache } from "./cache.js";
 import { discoverProvider, ProviderError, runProvider } from "./providers.js";
 import { isBlocked, loadState, markFailure, markSuccess, saveState, type RouterState } from "./state.js";
-import type { AttemptResult, DocumentResult, HostId, PolicyConfig, ProviderId, RouterConfig, TranslationResult } from "./types.js";
+import type { AttemptResult, DocumentResult, HostId, PolicyConfig, ProviderId, RouterConfig, TranslationDirection, TranslationResult } from "./types.js";
 
 export interface TranslateOptions {
   cwd?: string;
@@ -12,6 +12,7 @@ export interface TranslateOptions {
   policy?: string;
   projectSlug?: string;
   glossary?: string;
+  direction?: TranslationDirection;
 }
 
 interface PreparedPolicy { name: string; policy: PolicyConfig; }
@@ -53,7 +54,7 @@ async function routeSegment(text: string, config: RouterConfig, options: Transla
       const timeout = Math.min(step.timeoutMs ?? prepared.policy.segmentTimeoutMs ?? config.defaults.segmentTimeoutMs, available);
       const started = Date.now();
       try {
-        const prompts = buildTranslationPrompt(text, options.glossary);
+        const prompts = buildTranslationPrompt(text, options.glossary, options.direction);
         const raw = await runProvider(step.provider, providerConfig, prompts.system, prompts.prompt, timeout);
         const translated = stripCompletionMarker(raw);
         const elapsedMs = Date.now() - started;

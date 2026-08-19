@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 — 2026-08-19
+
+- Added the cross-provider `agent-translate-router-mcp` server with `translate` and `resolve_doc` tools.
+- Added native RU↔EN direction handling for MCP translation requests.
+- Added Agy plugin installation with router hook/MCP registration and old translation plugin disablement.
+- Added MCP installers for Codex, Cursor, Claude, and Agy that preserve unrelated servers.
+
 ## 0.1.2 — 2026-08-19
 
 - Added native Claude, Cursor, and Agy pre-tool hook adapters.
