@@ -9,7 +9,7 @@ All providers use the same segment default. A provider-specific `timeout_ms` is 
 
 The default `max_chunk_chars` is 4000. Smaller chunks keep technical Cyrillic documents below the latency cliff of long model generations while the five-minute request deadline still allows multiple segments.
 
-For large documents, the router first looks for an exact full-document cache. If the source hash changed, it looks up SHA-256 section entries in every configured cache home, translates only missing sections, and assembles the document. With `allow_partial: false`, any missing section that cannot be translated causes the entire original source to be returned and no mixed result is stored as a complete cache.
+For large documents, the router first looks for an exact full-document cache. If the source hash changed, it looks up SHA-256 Markdown-heading section entries in every configured cache home, translates only missing sections, and assembles the document. A section above `max_chunk_chars` is split into bounded fragments. With `allow_partial: false`, any missing section that cannot be translated causes the entire original source to be returned and no mixed result is stored as a complete cache.
 
 Failure classes are deliberately different from content decisions:
 

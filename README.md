@@ -124,6 +124,8 @@ agent-translate-router policy explain --host claude
 agent-translate-router policy validate
 agent-translate-router translate "Русский prompt" --host claude --json
 agent-translate-router doc README.md --json
+agent-translate-router docs . --dry-run
+agent-translate-router docs ./docs --project my-project
 agent-translate-router hook claude-pretool < hook.json
 agent-translate-router hook cursor-pretool < hook.json
 agent-translate-router hook agy-pretool < hook.json
@@ -134,6 +136,8 @@ agent-translate-router cache-stats
 ```
 
 `providers` checks CLI availability and performs non-generating auth checks where the provider supports them. It never sends a translation request during discovery. Quota and transient failure state is learned from real provider failures and persisted with cooldowns in `~/.agent-translate-router/state.json`, so a broken provider is not retried for every segment.
+
+`docs` recursively warms every `.md` and `.mdx` file (excluding `.git`, `node_modules`, `dist`, and `coverage`). It is deliberately sequential, respects the normal provider deadline and fail-open rules, and can be safely re-run: complete cache hits cost no provider call.
 
 ## Hook contract
 
@@ -171,7 +175,7 @@ The report combines the router's metrics with compatible historical `metrics.jso
 
 ## Cache compatibility
 
-The reader understands the existing `cursor-translate` / `claude-translate` frontmatter and `.en.sections.json` sidecars. Full-document cache hits are preferred; if the source SHA changed, reusable section hashes are merged from every configured sibling home. Newly completed documents are written in the compatible frontmatter/sidecar format under the router's own cache.
+The reader understands the existing `cursor-translate` / `claude-translate` frontmatter and `.en.sections.json` sidecars. Full-document cache hits are preferred; if the source SHA changed, reusable Markdown-heading section hashes are merged from every configured sibling home. A change retranslates only its affected section (or a bounded fragment larger than `max_chunk_chars`). Newly completed documents are written in the compatible frontmatter/sidecar format under the router's own cache.
 
 ## Safety and recursion
 

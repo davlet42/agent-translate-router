@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import { stringify } from "yaml";
 import { discoverProvider } from "./providers.js";
 import { defaultConfig, loadConfig, PROVIDERS } from "./config.js";
@@ -90,6 +90,43 @@ async function doc(args: string[], config: RouterConfig): Promise<void> {
   else console.log(`${result.text}\n\n[${result.provider}${result.complete ? "" : " / fail-open"}; segments ${result.translatedSegments}/${result.segments}; cache ${result.cachePath ?? "none"}]`);
 }
 
+async function markdownFiles(root: string): Promise<string[]> {
+  const files: string[] = [];
+  async function walk(path: string): Promise<void> {
+    let entries;
+    try { entries = await readdir(path, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      if ([".git", "node_modules", "dist", "coverage"].includes(entry.name)) continue;
+      const child = join(path, entry.name);
+      if (entry.isDirectory()) await walk(child);
+      else if (entry.isFile() && /\.mdx?$/iu.test(entry.name)) files.push(child);
+    }
+  }
+  await walk(root);
+  return files.sort((a, b) => a.localeCompare(b));
+}
+
+async function docs(args: string[], config: RouterConfig): Promise<void> {
+  const project = flag(args, "--project");
+  const path = args.find((arg) => !arg.startsWith("--") && arg !== project) ?? process.cwd();
+  const files = await markdownFiles(resolve(path));
+  if (has(args, "--dry-run")) {
+    console.log(files.join("\n"));
+    console.log(`\n${files.length} Markdown file(s) would be warmed.`);
+    return;
+  }
+  let complete = 0;
+  let cached = 0;
+  for (const file of files) {
+    const result = await translateDocument(file, config, { projectSlug: project, host: flag(args, "--host") as HostId | undefined, event: "document" });
+    if (result.complete) complete += 1;
+    if (result.provider === "cache") cached += 1;
+    console.log(`${result.complete ? "ok" : "fail-open"}\t${result.provider}\t${file}`);
+  }
+  console.log(`\nWarmed ${complete}/${files.length} Markdown file(s); ${cached} full cache hit(s).`);
+  if (complete !== files.length) process.exitCode = 1;
+}
+
 async function report(args: string[], config: RouterConfig): Promise<void> {
   const daysValue = flag(args, "--days");
   const days = daysValue && Number.isFinite(Number(daysValue)) && Number(daysValue) > 0 ? Math.round(Number(daysValue)) : 7;
@@ -133,6 +170,7 @@ async function main(): Promise<void> {
   if (command === "policy" && args[1] === "validate") { explain(config, []); return; }
   if (command === "translate" || command === "prompt") return translate(args.slice(1), config);
   if (command === "doc") return doc(args.slice(1), config);
+  if (command === "docs") return docs(args.slice(1), config);
   if (command === "hook") return runHostHook(args[1], config);
   if (command === "hook-resolve") return hookResolve(config);
   if (command === "install-hooks") {
@@ -156,6 +194,7 @@ Commands:
   policy validate
   translate|prompt [text] [--host claude] [--json]
   doc <file> [--project slug] [--json]
+  docs [path] [--project slug] [--dry-run]
   hook claude-pretool|cursor-pretool|agy-pretool
   hook-resolve
   install-hooks [all|claude|cursor|agy|codex] [--dry-run] [--no-disable]

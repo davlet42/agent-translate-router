@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.13 — 2026-08-20
+
+- Add `docs [path] [--dry-run]` to pre-warm every project Markdown file through the normal shared cache and provider policy.
+- Cache Markdown documents by individual heading section so one changed section does not retranslate its unchanged neighbours.
+
 ## 0.1.12 — 2026-08-20
 
 - Reuse a complete shared document cache by its source path and SHA even when two hosts chose different workspace roots or project slugs.

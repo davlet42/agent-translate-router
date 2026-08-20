@@ -12,24 +12,11 @@ function splitOversized(value: string, maxChars: number): string[] {
 }
 
 export function splitText(text: string, maxChars: number): string[] {
-  if (text.length <= maxChars) return [text];
   const sections = text.split(/(?=^#{1,6}\s)/m);
   const chunks: string[] = [];
-  let current = "";
   for (const section of sections) {
-    if (current && current.length + section.length > maxChars) {
-      chunks.push(current);
-      current = "";
-    }
-    if (section.length > maxChars) {
-      if (current) chunks.push(current);
-      current = "";
-      chunks.push(...splitOversized(section, maxChars));
-    } else {
-      current += section;
-    }
+    if (section) chunks.push(...splitOversized(section, maxChars));
   }
-  if (current) chunks.push(current);
   return chunks.length ? chunks : [text];
 }
 

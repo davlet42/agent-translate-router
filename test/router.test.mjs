@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { chmod, mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, basename } from "node:path";
-import { sha256 } from "../dist/segments.js";
+import { sha256, splitText } from "../dist/segments.js";
 import { translateDocument, translateText } from "../dist/router.js";
 
 function config(home, command, policy = {}) {
@@ -21,6 +21,11 @@ function config(home, command, policy = {}) {
     cache: { ownDir: join(home, "own"), siblingHomes: [], readSiblings: false, writeOwn: true },
   };
 }
+
+test("keeps Markdown heading sections as independent cache units", () => {
+  const text = "# First\nРусский текст.\n\n## Second\nЕщё русский текст.";
+  assert.deepEqual(splitText(text, 4_000), ["# First\nРусский текст.\n\n", "## Second\nЕщё русский текст."]);
+});
 
 test("reuses a compatible sibling full document cache", async () => {
   const root = await mkdtemp(join(tmpdir(), "agent-router-cache-"));
