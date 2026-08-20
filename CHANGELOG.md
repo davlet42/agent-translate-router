@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.12 — 2026-08-20
+
+- Reuse a complete shared document cache by its source path and SHA even when two hosts chose different workspace roots or project slugs.
+- Pass the requesting host to MCP servers at installation time, including `codex`, so `by host` metrics are accurate.
+
 ## 0.1.11 — 2026-08-20
 
 - Add host-aware metrics and a `by host` report section for Claude, Cursor, Agy, and Codex hooks.

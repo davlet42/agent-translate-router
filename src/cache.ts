@@ -51,6 +51,30 @@ async function readSections(path: string): Promise<Map<string, string>> {
   } catch { return new Map(); }
 }
 
+async function findCompatibleCacheInHome(home: string, sourcePath: string, sourceSha256: string): Promise<{ path: string; body: string; sections: Map<string, string> } | undefined> {
+  const root = join(resolve(home), "cache");
+  async function walk(directory: string): Promise<{ path: string; body: string; sections: Map<string, string> } | undefined> {
+    let entries;
+    try { entries = await readdir(directory, { withFileTypes: true }); } catch { return undefined; }
+    for (const entry of entries) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        const found = await walk(path);
+        if (found) return found;
+      } else if (entry.name.endsWith(".en.md")) {
+        try {
+          const parsed = parseDoc(await readFile(path, "utf8"));
+          if (parsed?.meta.sourcePath === sourcePath && parsed.meta.sourceSha256 === sourceSha256 && parsed.body.trim()) {
+            return { path, body: parsed.body.trimEnd(), sections: await readSections(path) };
+          }
+        } catch { /* keep looking */ }
+      }
+    }
+    return undefined;
+  }
+  return walk(root);
+}
+
 export interface CacheLookup { fullText?: string; sections: Map<string, string>; path?: string; source: "own" | "sibling"; }
 
 export async function findCache(options: { homes: string[]; ownHome: string; readSiblings: boolean; slug: string; sourcePath: string; root: string; sourceSha256: string; }): Promise<CacheLookup> {
@@ -75,6 +99,13 @@ export async function findCache(options: { homes: string[]; ownHome: string; rea
         for (const [key, value] of sections) mergedSections.set(key, value);
       }
     } catch { /* try next cache */ }
+  }
+  // Different hosts can supply different workspace roots/slugs for the same
+  // absolute document. Fall back to the metadata identity so that an existing
+  // translation remains shared across those hosts instead of being re-run.
+  for (const home of homes) {
+    const found = await findCompatibleCacheInHome(home, options.sourcePath, options.sourceSha256);
+    if (found) return { fullText: found.body, sections: found.sections, path: found.path, source: home === options.ownHome ? "own" : "sibling" };
   }
   return { sections: mergedSections, path: firstSectionPath, source: firstSectionSource };
 }

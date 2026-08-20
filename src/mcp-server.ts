@@ -7,6 +7,9 @@ import { translateDocument, translateText } from "./router.js";
 import type { HostId, TranslationDirection } from "./types.js";
 
 let versionPromise: Promise<string> | undefined;
+const configuredHost = (["codex", "agy", "cursor", "claude", "unknown"] as const).includes(process.argv[2] as HostId)
+  ? process.argv[2] as HostId
+  : undefined;
 
 async function packageVersion(): Promise<string> {
   versionPromise ??= readFile(new URL("../package.json", import.meta.url), "utf8")
@@ -38,6 +41,7 @@ const TOOLS = [
       properties: {
         file_path: { type: "string", description: "Relative or absolute Markdown path" },
         project_slug: { type: "string" },
+        host: { type: "string", enum: ["codex", "agy", "cursor", "claude", "unknown"] },
         include_body: { type: "boolean", default: false },
       },
       required: ["file_path"],
@@ -68,14 +72,15 @@ export async function handleMcpRequest(request: Record<string, unknown>, config?
       const text = typeof args.text === "string" ? args.text : "";
       if (!text) return { jsonrpc: "2.0", id, result: textResult({ text, complete: false, failOpen: true, reason: "text is required" }) };
       const direction: TranslationDirection = args.direction === "en_ru" ? "en_ru" : "ru_en";
-      const host = typeof args.host === "string" ? args.host as HostId : undefined;
+      const host = typeof args.host === "string" ? args.host as HostId : configuredHost;
       const result = await translateText(text, activeConfig, { direction, host, projectSlug: typeof args.project_slug === "string" ? args.project_slug : undefined, event: "prompt" });
       return { jsonrpc: "2.0", id, result: textResult({ ...result, failOpen: !result.complete, direction }) };
     }
     if (name === "resolve_doc") {
       const sourcePath = typeof args.file_path === "string" ? resolve(args.file_path) : "";
       if (!sourcePath) return { jsonrpc: "2.0", id, result: textResult({ sourcePath, readPath: sourcePath, complete: false, failOpen: true, reason: "file_path is required" }) };
-      const result = await translateDocument(sourcePath, activeConfig, { cwd: dirname(sourcePath), projectSlug: typeof args.project_slug === "string" ? args.project_slug : undefined, event: "document" });
+      const host = typeof args.host === "string" ? args.host as HostId : configuredHost;
+      const result = await translateDocument(sourcePath, activeConfig, { cwd: dirname(sourcePath), host, projectSlug: typeof args.project_slug === "string" ? args.project_slug : undefined, event: "document" });
       const readPath = result.complete && result.cachePath ? result.cachePath : sourcePath;
       const body = args.include_body === true ? (result.complete ? result.text : await readFile(sourcePath, "utf8")) : undefined;
       return { jsonrpc: "2.0", id, result: textResult({ sourcePath, readPath, cachePath: result.cachePath ?? null, complete: result.complete, failOpen: !result.complete, provider: result.provider, model: result.model, segments: result.segments, translatedSegments: result.translatedSegments, ...(body === undefined ? {} : { body }) }) };

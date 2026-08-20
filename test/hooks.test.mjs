@@ -82,10 +82,12 @@ test("MCP installation disables only the old translation servers", () => {
   assert.equal(cursor.mcpServers["cursor-translate"], undefined);
   assert.equal(cursor.mcpServers.playwright.command, "playwright");
   assert.equal(cursor.mcpServers["agent-translate-router"].command, "agent-translate-router-mcp");
+  assert.deepEqual(cursor.mcpServers["agent-translate-router"].args, ["cursor"]);
 
   const codex = mergeCodexMcp("[mcp_servers.codex-translate]\ncommand = \"codex-translate-mcp\"\n\n[projects.\"/\"]\ntrust_level = \"trusted\"\n");
   assert.match(codex, /\[mcp_servers\.codex-translate\][\s\S]*enabled = false/);
   assert.match(codex, /\[mcp_servers\.agent-translate-router\]/);
+  assert.match(codex, /args = \["codex"\]/);
 });
 
 test("MCP server exposes the cross-provider tools", async () => {

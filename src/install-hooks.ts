@@ -166,7 +166,7 @@ export async function installAgyPlugin(options: InstallHooksOptions = {}): Promi
         PreToolUse: [agyReadHook(command, "view_file")],
       },
     }],
-    [join(pluginDir, "mcp_config.json"), { mcpServers: { "agent-translate-router": { command: process.execPath, args: [mcpPath] } } }],
+    [join(pluginDir, "mcp_config.json"), { mcpServers: { "agent-translate-router": { command: process.execPath, args: [mcpPath, "agy"] } } }],
   ];
   const backups: string[] = [];
   for (const [path, value] of files) {

@@ -37,6 +37,20 @@ test("reuses a compatible sibling full document cache", async () => {
   assert.equal(result.provider, "cache");
 });
 
+test("reuses a document cache when another host used a different workspace slug", async () => {
+  const root = await mkdtemp(join(tmpdir(), "agent-router-cross-workspace-"));
+  const source = join(root, "README.md");
+  const sourceText = "Русский документ.";
+  const sibling = join(root, "sibling");
+  await writeFile(source, sourceText);
+  const target = join(sibling, "cache", "other-workspace", "nested", "README.en.md");
+  await mkdir(join(sibling, "cache", "other-workspace", "nested"), { recursive: true });
+  await writeFile(target, `---\ncursor-translate-source: ${source}\ncursor-translate-source-sha256: ${sha256(sourceText)}\ncursor-translate-project: other-workspace\n---\n\nEnglish document.\n`);
+  const result = await translateDocument(source, { ...config(root, "missing-command"), cache: { ownDir: join(root, "own"), siblingHomes: [sibling], readSiblings: true, writeOwn: false } }, { cwd: root });
+  assert.equal(result.provider, "cache");
+  assert.equal(result.cachePath, target);
+});
+
 test("translates all segments through one provider with a shared default timeout", async () => {
   const root = await mkdtemp(join(tmpdir(), "agent-router-provider-"));
   const fake = join(root, "fake-provider.sh");

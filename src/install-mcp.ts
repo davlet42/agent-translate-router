@@ -36,7 +36,7 @@ async function saveJson(path: string, value: JsonObject, dryRun: boolean): Promi
 export function mergeCursorMcp(input: JsonObject, disableOld = true): JsonObject {
   const servers = { ...object(input.mcpServers) };
   if (disableOld) delete servers["cursor-translate"];
-  servers["agent-translate-router"] = { command: "agent-translate-router-mcp", args: [] };
+  servers["agent-translate-router"] = { command: "agent-translate-router-mcp", args: ["cursor"] };
   return { ...input, mcpServers: servers };
 }
 
@@ -57,9 +57,17 @@ function setTomlEnabled(text: string, section: string): string {
 
 export function mergeCodexMcp(input: string, disableOld = true): string {
   let result = disableOld ? setTomlEnabled(input, "codex-translate") : input;
-  if (!/^\[mcp_servers\.agent-translate-router\]$/mu.test(result)) {
-    result = result.trimEnd() + "\n\n[mcp_servers.agent-translate-router]\ncommand = \"agent-translate-router-mcp\"\nargs = []\n";
+  const header = "[mcp_servers.agent-translate-router]";
+  const block = `${header}\ncommand = \"agent-translate-router-mcp\"\nargs = [\"codex\"]`;
+  const start = result.split(/\r?\n/u).findIndex((line) => line.trim() === header);
+  if (start < 0) return result.trimEnd() + `\n\n${block}\n`;
+  const lines = result.split(/\r?\n/u);
+  let end = lines.length;
+  for (let index = start + 1; index < lines.length; index += 1) {
+    if (/^\s*\[/u.test(lines[index])) { end = index; break; }
   }
+  lines.splice(start, end - start, ...block.split("\n"));
+  result = lines.join("\n");
   return result;
 }
 
@@ -100,7 +108,8 @@ async function installClaude(options: InstallMcpOptions): Promise<string[]> {
         await execFileAsync("claude", ["mcp", "get", "agent-translate-router"], { env: { ...process.env, HOME: home } });
         alreadyRegistered = true;
       } catch { /* register below */ }
-      if (!alreadyRegistered) await execFileAsync("claude", ["mcp", "add", "--scope", "user", "agent-translate-router", "--", "agent-translate-router-mcp"], { env: { ...process.env, HOME: home } });
+      if (alreadyRegistered) await execFileAsync("claude", ["mcp", "remove", "agent-translate-router"], { env: { ...process.env, HOME: home } });
+      await execFileAsync("claude", ["mcp", "add", "--scope", "user", "agent-translate-router", "--", "agent-translate-router-mcp", "claude"], { env: { ...process.env, HOME: home } });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return [`Claude MCP: could not register automatically (${message})`, ...(settingsBackup ? [`backup: ${settingsBackup}`] : []), ...(claudeBackup ? [`backup: ${claudeBackup}`] : [])];
